@@ -1,10 +1,13 @@
 import { StyleSheet, View, Text } from "react-native";
+import SearchBar from "../components/SearchBar";
 
 export default function WeatherScreen() {
   return (
     <View style={styles.container}>
 
       <Text style={styles.title}>CloudNine</Text>
+
+      <SearchBar />
 
       <Text style={styles.city}>Islamabad</Text>
 
