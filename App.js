@@ -1,11 +1,14 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View, Text } from "react-native";
 
 export default function App() {
   return (
+    
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <View style={styles.Tcontainer }>
+        <Text style={{color:"white" }}>Khan</Text>
+      </View>
+      <Text style={styles.title}>CloudNine</Text>
+      <Text style={styles.subtitle}>Weather App</Text>
     </View>
   );
 }
@@ -13,8 +16,25 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#0B1420",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  Tcontainer:{
+height:"100px",
+width:"100px",
+color:"white",
+  },
+
+  title: {
+    color: "white",
+    fontSize: 40,
+    fontWeight: "bold",
+  },
+
+  subtitle: {
+    color: "#9CA3AF",
+    fontSize: 18,
+    marginTop: 8,
   },
 });
