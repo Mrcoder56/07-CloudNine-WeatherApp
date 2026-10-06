@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import SearchBar from "../components/SearchBar";
 
 export default function WeatherScreen() {
+  const [city, setCity] = useState("Islamabad");
+
   return (
     <View style={styles.container}>
 
       <Text style={styles.title}>CloudNine</Text>
 
-      <SearchBar />
+      <SearchBar city={city} setCity={setCity} />
 
-      <Text style={styles.city}>Islamabad</Text>
+      <Text style={styles.city}>{city}</Text>
 
       <Text style={styles.condition}>Cloudy</Text>
 
