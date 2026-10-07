@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import SearchBar from "../components/SearchBar";
 import { getCurrentWeather } from "../services/WeatherApi";
+import Hero from "../components/Hero";
 
 export default function WeatherScreen() {
   const [city, setCity] = useState("Islamabad");
@@ -31,9 +32,7 @@ export default function WeatherScreen() {
 
       <Text style={styles.city}>{weather?.name}</Text>
 
-      <Text style={styles.condition}>{weather?.weather?.[0]?.main}</Text>
-
-      <Text style={styles.temperature}>  {Math.round(weather?.main?.temp ?? 0)}°</Text>
+      <Hero weather={weather} />
 
     </View>
   );
