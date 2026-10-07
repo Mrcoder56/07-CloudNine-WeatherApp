@@ -5,12 +5,14 @@ import { getCurrentWeather } from "../services/WeatherApi";
 
 export default function WeatherScreen() {
   const [city, setCity] = useState("Islamabad");
+  const [weather,setWeather]=useState(null);
   useEffect(() => {
   async function fetchWeather() {
     try {
       const data = await getCurrentWeather(city);
 
       console.log("CloudNine weather:", data);
+      setWeather(data);
 
     } catch (error) {
       console.error("Failed to get weather:", error);
@@ -27,11 +29,11 @@ export default function WeatherScreen() {
 
       <SearchBar city={city} setCity={setCity} />
 
-      <Text style={styles.city}>{city}</Text>
+      <Text style={styles.city}>{weather?.name}</Text>
 
-      <Text style={styles.condition}>Cloudy</Text>
+      <Text style={styles.condition}>{weather?.weather?.[0]?.main}</Text>
 
-      <Text style={styles.temperature}>28°</Text>
+      <Text style={styles.temperature}>  {Math.round(weather?.main?.temp ?? 0)}°</Text>
 
     </View>
   );
