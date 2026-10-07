@@ -1,9 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import SearchBar from "../components/SearchBar";
+import { getCurrentWeather } from "../services/WeatherApi";
 
 export default function WeatherScreen() {
   const [city, setCity] = useState("Islamabad");
+  useEffect(() => {
+  async function fetchWeather() {
+    try {
+      const data = await getCurrentWeather(city);
+
+      console.log("CloudNine weather:", data);
+
+    } catch (error) {
+      console.error("Failed to get weather:", error);
+    }
+  }
+
+  fetchWeather();
+}, [city]);
 
   return (
     <View style={styles.container}>

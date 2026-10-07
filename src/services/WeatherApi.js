@@ -29,3 +29,14 @@ export async function getCurrentWeather(city) {
     throw error;
   }
 }
+console.log("Requesting weather for:", city);
+
+const response = await fetch(url);
+
+console.log("Response status:", response.status);
+
+const data = await response.json();
+
+console.log("Weather data:", data);
+
+return data;

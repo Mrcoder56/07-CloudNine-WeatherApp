@@ -3,6 +3,7 @@
 # dependencies
 node_modules/
 .claude
+WeatherApi.jk
 
 # Expo
 .expo/
