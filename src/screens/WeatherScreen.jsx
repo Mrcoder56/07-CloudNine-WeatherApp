@@ -1,31 +1,65 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View, Text, ScrollView} from "react-native";
 import SearchBar from "../components/SearchBar";
 import { getCurrentWeather } from "../services/WeatherApi";
 import AirConditions from "../components/AirConditions";
 import Hero from "../components/Hero";
+import Forecast from "../components/Forecast";
+import {  getForecast } from "../services/WeatherApi";
 
 export default function WeatherScreen() {
   const [city, setCity] = useState("Islamabad");
   const [weather,setWeather]=useState(null);
-  useEffect(() => {
+  const [forecast, setForecast] = useState([]);
+  
+useEffect(() => {
   async function fetchWeather() {
     try {
       const data = await getCurrentWeather(city);
-
-      console.log("CloudNine weather:", data);
       setWeather(data);
 
+      const forecastData = await getForecast(city);
+
+      const dailyForecast = [];
+      const dates = [];
+
+      forecastData.list.forEach((item) => {
+        const date = item.dt_txt.split(" ")[0];
+
+        if (!dates.includes(date)) {
+          dates.push(date);
+        }
+      });
+
+      dates.slice(0, 5).forEach((date) => {
+       const dayForecast = forecastData.list.find(
+  (item) => item.dt_txt.startsWith(date)
+);
+        if (dayForecast) {
+          dailyForecast.push({
+            date: date,
+            temperature: dayForecast.main.temp,
+            condition: dayForecast.weather[0].main,
+          });
+        }
+      });
+
+      setForecast(dailyForecast);
     } catch (error) {
-      console.error("Failed to get weather:", error);
+      console.error("Failed to fetch weather:", error);
     }
   }
 
   fetchWeather();
 }, [city]);
 
+
   return (
-    <View style={styles.container}>
+    <ScrollView
+       style={styles.container}
+    contentContainerStyle={styles.content}
+    showsVerticalScrollIndicator={false}
+  >
 
       <Text style={styles.title}>CloudNine</Text>
 
@@ -35,8 +69,9 @@ export default function WeatherScreen() {
 
       <Hero weather={weather} />
       <AirConditions weather={weather} />
+      <Forecast forecast={forecast} />
 
-    </View>
+    </ScrollView>
   );
 }
 
