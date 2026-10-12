@@ -30,3 +30,20 @@ export async function getCurrentWeather(city) {
     throw error;
   }
 }
+
+export async function getForecast(city) {
+  const url =
+    `https://api.openweathermap.org/data/2.5/forecast` +
+    `?q=${encodeURIComponent(city)}` +
+    `&appid=${API_KEY}` +
+    `&units=metric`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("Unable to fetch forecast data");
+  }
+
+  return await response.json();
+}
+
