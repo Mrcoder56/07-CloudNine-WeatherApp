@@ -1,4 +1,4 @@
-const API_KEY = "";
+const API_KEY = process.env.EXPO_PUBLIC_WEATHER_API_KEY;
 
 export async function getCurrentWeather(city) {
   try {
