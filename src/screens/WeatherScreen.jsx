@@ -9,8 +9,17 @@ import {  getForecast } from "../services/WeatherApi";
 
 export default function WeatherScreen() {
   const [city, setCity] = useState("Islamabad");
+  const [searchCity,setSearchCity]= useState("Mingora");
   const [weather,setWeather]=useState(null);
   const [forecast, setForecast] = useState([]);
+  
+  function handleSearch() {
+  const trimmedCity = city.trim();
+
+  if (trimmedCity !== "") {
+    setSearchCity(trimmedCity);
+  }
+}
   
 useEffect(() => {
   async function fetchWeather() {
