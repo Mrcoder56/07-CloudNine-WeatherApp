@@ -41,7 +41,7 @@ export default function Hero({ weather }) {
 const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
-    marginTop: 30,
+    marginTop: 30.0,
   },
 
   icon: {
