@@ -60,7 +60,7 @@ useEffect(() => {
   }
 
   fetchWeather();
-}, [city]);
+}, [searchCity]);
 
 
   return (
