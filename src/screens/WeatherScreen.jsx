@@ -24,10 +24,10 @@ export default function WeatherScreen() {
 useEffect(() => {
   async function fetchWeather() {
     try {
-      const data = await getCurrentWeather(city);
+      const data = await getCurrentWeather(searchCity);
       setWeather(data);
 
-      const forecastData = await getForecast(city);
+      const forecastData = await getForecast(searchCity);
 
       const dailyForecast = [];
       const dates = [];
@@ -72,7 +72,11 @@ useEffect(() => {
 
       <Text style={styles.title}>CloudNine</Text>
 
-      <SearchBar city={city} setCity={setCity} />
+      <SearchBar
+  city={city}
+  setCity={setCity}
+  onSearch={handleSearch}
+/>
 
       <Text style={styles.city}>{weather?.name}</Text>
 
