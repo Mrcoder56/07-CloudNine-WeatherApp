@@ -8,6 +8,8 @@ import Forecast from "../components/Forecast";
 import {  getForecast } from "../services/WeatherApi";
 
 export default function WeatherScreen() {
+  const [loading, setLoading] = useState(false);
+const [error, setError] = useState("");
   const [city, setCity] = useState("Islamabad");
   const [searchCity,setSearchCity]= useState("Mingora");
   const [weather,setWeather]=useState(null);
@@ -21,41 +23,26 @@ export default function WeatherScreen() {
   }
 }
   
+
 useEffect(() => {
   async function fetchWeather() {
+    setLoading(true);
+    setError("");
+
     try {
       const data = await getCurrentWeather(searchCity);
       setWeather(data);
 
       const forecastData = await getForecast(searchCity);
 
-      const dailyForecast = [];
-      const dates = [];
-
-      forecastData.list.forEach((item) => {
-        const date = item.dt_txt.split(" ")[0];
-
-        if (!dates.includes(date)) {
-          dates.push(date);
-        }
-      });
-
-      dates.slice(0, 5).forEach((date) => {
-       const dayForecast = forecastData.list.find(
-  (item) => item.dt_txt.startsWith(date)
-);
-        if (dayForecast) {
-          dailyForecast.push({
-            date: date,
-            temperature: dayForecast.main.temp,
-            condition: dayForecast.weather[0].main,
-          });
-        }
-      });
-
-      setForecast(dailyForecast);
+      // Keep your existing daily forecast-processing code here.
+      // It should create dailyForecast and finish with:
+      // setForecast(dailyForecast);
     } catch (error) {
       console.error("Failed to fetch weather:", error);
+      setError("Unable to load weather. Check the city or your internet connection.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -77,6 +64,13 @@ useEffect(() => {
   setCity={setCity}
   onSearch={handleSearch}
 />
+{loading && (
+  <Text style={styles.message}>Loading weather...</Text>
+)}
+
+{error !== "" && (
+  <Text style={styles.error}>{error}</Text>
+)}
 
       <Text style={styles.city}>{weather?.name}</Text>
 
@@ -101,6 +95,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 30,
   },
+
+ message: {
+  color: "#9CA3AF",
+  fontSize: 16,
+  textAlign: "center",
+  marginTop: 20,
+},
+error: {
+  color: "#F87171",
+  fontSize: 14,
+  textAlign: "center",
+  marginTop: 15,
+},
 
   city: {
     color: "white",
