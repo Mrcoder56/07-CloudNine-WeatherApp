@@ -5,6 +5,7 @@ import {
   View,
   Text,
   ScrollView,
+  Pressable,
 } from "react-native";
 
 import { getCurrentWeather } from "../services/WeatherApi";
@@ -85,7 +86,13 @@ export default function CitiesScreen() {
           const condition = city.weather?.[0]?.main;
 
           return (
-            <View key={city.id} style={styles.cityCard}>
+            <Pressable
+  key={city.id}
+  style={styles.cityCard}
+  onPress={() => {
+    console.log("Selected city:", city.name);
+  }}
+>
               <View style={styles.cityDetails}>
                 <Text style={styles.cityName}>{city.name}</Text>
 
@@ -107,7 +114,7 @@ export default function CitiesScreen() {
                   {Math.round(city.main?.temp ?? 0)}°
                 </Text>
               </View>
-            </View>
+            </Pressable>
           );
         })}
     </ScrollView>
