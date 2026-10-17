@@ -3,6 +3,7 @@ import { StyleSheet, View, Text } from "react-native";
 
 function getDayName(dateString) {
   const date = new Date(`${dateString}T12:00:00`);
+
   return date.toLocaleDateString("en-US", {
     weekday: "short",
   });
@@ -21,35 +22,47 @@ function getWeatherIcon(condition) {
       return "⛈️";
     case "Snow":
       return "❄️";
+    case "Mist":
+    case "Fog":
+    case "Haze":
+      return "🌫️";
     default:
       return "🌤️";
   }
 }
 
-export default function Forecast({ forecast }) {
+export default function Forecast({ forecast = [] }) {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>5-DAY FORECAST</Text>
 
-      {forecast.map((day, index) => (
-        <View key={day.date + index} style={styles.row}>
-          <Text style={styles.date}>
-            {getDayName(day.date)}
-          </Text>
+      {forecast.length === 0 ? (
+        <Text style={styles.emptyMessage}>
+          Forecast data is not available yet.
+        </Text>
+      ) : (
+        forecast.map((day, index) => (
+          <View key={`${day.date}-${index}`} style={styles.row}>
+            <Text style={styles.date}>
+              {getDayName(day.date)}
+            </Text>
 
-          <Text style={styles.icon}>
-            {getWeatherIcon(day.condition)}
-          </Text>
+            <Text style={styles.icon}>
+              {getWeatherIcon(day.condition)}
+            </Text>
 
-          <Text style={styles.condition}>
-            {day.condition}
-          </Text>
+            <Text style={styles.condition}>
+              {day.condition}
+            </Text>
 
-          <Text style={styles.temperature}>
-            {Math.round(day.temperature)}°
-          </Text>
-        </View>
-      ))}
+            <Text style={styles.temperature}>
+              {typeof day.temperature === "number"
+                ? `${Math.round(day.temperature)}°`
+                : "--"}
+            </Text>
+          </View>
+        ))
+      )}
     </View>
   );
 }
@@ -57,50 +70,53 @@ export default function Forecast({ forecast }) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#182536",
-    borderRadius: 20,
-    padding: 20,
-    marginTop: 20,
+    borderRadius: 18,
+    padding: 18,
+    marginTop: 25,
     marginBottom: 20,
   },
-
   heading: {
     color: "#9CA3AF",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 20,
+    fontSize: 13,
+    fontWeight: "bold",
+    letterSpacing: 1,
+    marginBottom: 15,
   },
-
   row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#2B394B",
   },
-
   date: {
-    color: "white",
-    fontSize: 14,
-    width: 45,
-  },
-
-  icon: {
-    fontSize: 24,
-    width: 38,
-    textAlign: "center",
-  },
-
-  condition: {
-    color: "#9CA3AF",
-    fontSize: 13,
-    flex: 1,
-    textAlign: "center",
-  },
-
-  temperature: {
-    color: "white",
-    fontSize: 18,
+    color: "#FFFFFF",
+    fontSize: 15,
     fontWeight: "600",
-    width: 45,
+    width: 48,
+  },
+  icon: {
+    fontSize: 23,
+    width: 43,
+    textAlign: "center",
+  },
+  condition: {
+    color: "#D1D5DB",
+    fontSize: 14,
+    flex: 1,
+    marginLeft: 8,
+  },
+  temperature: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "bold",
+    minWidth: 42,
     textAlign: "right",
+  },
+  emptyMessage: {
+    color: "#9CA3AF",
+    fontSize: 14,
+    paddingVertical: 12,
+    lineHeight: 21,
   },
 });

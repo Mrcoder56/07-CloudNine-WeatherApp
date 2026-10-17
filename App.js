@@ -1,4 +1,3 @@
-
 import { NavigationContainer } from "@react-navigation/native";
 import TabNavigator from "./src/navigation/TabNavigator";
 

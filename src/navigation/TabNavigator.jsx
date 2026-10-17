@@ -1,4 +1,3 @@
-
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -12,20 +11,27 @@ export default function TabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+
         tabBarStyle: {
           backgroundColor: "#182536",
-          borderTopColor: "#263548",
+          borderTopColor: "#26364A",
           height: 65,
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: "#93C5FD",
+
+        tabBarActiveTintColor: "#60A5FA",
         tabBarInactiveTintColor: "#9CA3AF",
-        tabBarIcon: ({ color, size }) => {
+
+        tabBarIcon: ({ color, size, focused }) => {
           const iconName =
             route.name === "Weather"
-              ? "cloud-outline"
-              : "location-outline";
+              ? focused
+                ? "cloud"
+                : "cloud-outline"
+              : focused
+                ? "location"
+                : "location-outline";
 
           return (
             <Ionicons
@@ -37,8 +43,15 @@ export default function TabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Weather" component={WeatherScreen} />
-      <Tab.Screen name="Cities" component={CitiesScreen} />
+      <Tab.Screen
+        name="Weather"
+        component={WeatherScreen}
+      />
+
+      <Tab.Screen
+        name="Cities"
+        component={CitiesScreen}
+      />
     </Tab.Navigator>
   );
 }
