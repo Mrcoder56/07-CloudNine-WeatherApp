@@ -1,170 +1,162 @@
 
-import { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
+
 import {
-  StyleSheet,
   View,
   Text,
-  ScrollView,
-  Pressable,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 
-import { getCurrentWeather } from "../services/WeatherApi";
+import { useFocusEffect } from "@react-navigation/native";
 
-const cityNames = ["Swat,PK", "Islamabad,PK", "London,GB"];
+import { getCurrentWeather } from "../Services/WeatherApi";
 
-function getWeatherIcon(condition) {
-  switch (condition) {
-    case "Clear":
-      return "☀️";
-    case "Clouds":
-      return "☁️";
-    case "Rain":
-    case "Drizzle":
-      return "🌧️";
-    case "Thunderstorm":
-      return "⛈️";
-    case "Snow":
-      return "❄️";
-    case "Mist":
-    case "Fog":
-    case "Haze":
-      return "🌫️";
-    default:
-      return "🌤️";
-  }
-}
+import {
+  getCities,
+  removeCity,
+} from "../services/CityStorage";
 
 export default function CitiesScreen({ navigation }) {
   const [cities, setCities] = useState([]);
+  const [weatherData, setWeatherData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadCities = useCallback(async () => {
+    setLoading(true);
 
-    async function fetchCitiesWeather() {
-      setLoading(true);
-      setError("");
+    try {
+      const savedCities = await getCities();
+      setCities(savedCities);
 
-      try {
-        const results = await Promise.allSettled(
-          cityNames.map((name) => getCurrentWeather(name))
-        );
+      const results = await Promise.all(
+        savedCities.map(async (city) => {
+          try {
+            const data = await getCurrentWeather(city);
+            return [city, data];
+          } catch {
+            return [city, null];
+          }
+        })
+      );
 
-        if (cancelled) return;
-
-        const successfulCities = results
-          .filter((result) => result.status === "fulfilled")
-          .map((result) => result.value);
-
-        const failedCount =
-          results.length - successfulCities.length;
-
-        setCities(successfulCities);
-
-        if (successfulCities.length === 0) {
-          setError(
-            "Unable to load cities. Check your API key and internet connection."
-          );
-        } else if (failedCount > 0) {
-          setError(
-            `${failedCount} city request(s) failed. Some cities may be missing.`
-          );
-        }
-      } catch (err) {
-        console.error("Failed to load city weather:", err);
-
-        if (!cancelled) {
-          setError("Unable to load city weather. Please try again.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+      setWeatherData(Object.fromEntries(results));
+    } catch (error) {
+      console.error("Could not load cities:", error);
+      Alert.alert("Error", "Could not load your saved cities.");
+    } finally {
+      setLoading(false);
     }
-
-    fetchCitiesWeather();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
-  function handleCityPress(city) {
-    // The tab route must be named "Weather" in TabNavigator.
-    navigation.navigate("Weather", {
-      selectedCity: city.name,
-    });
-  }
+  useFocusEffect(
+    useCallback(() => {
+      loadCities();
+    }, [loadCities])
+  );
+
+  const handleRemove = (city) => {
+    Alert.alert(
+      "Remove City",
+      `Remove ${city} from My Cities?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const updated = await removeCity(city);
+              setCities(updated);
+
+              setWeatherData((previous) => {
+                const next = { ...previous };
+                delete next[city];
+                return next;
+              });
+            } catch (error) {
+              Alert.alert("Error", "Could not remove this city.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const renderCity = ({ item }) => {
+    const weather = weatherData[item];
+
+    return (
+      <View style={styles.card}>
+        <TouchableOpacity
+          style={styles.cityInfo}
+          onPress={() =>
+            navigation.navigate("Weather", {
+              selectedCity: item,
+              requestId: Date.now(),
+            })
+          }
+        >
+          <Text style={styles.cityName}>{item}</Text>
+
+          <Text style={styles.condition}>
+            {weather?.weather?.[0]?.description ||
+              "Weather unavailable"}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.rightSide}>
+          {weather?.main?.temp != null && (
+            <Text style={styles.temperature}>
+              {Math.round(weather.main.temp)}°
+            </Text>
+          )}
+
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => handleRemove(item)}
+          >
+            <Text style={styles.removeText}>Remove</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <Text style={styles.title}>Your Cities</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>My Cities</Text>
 
       <Text style={styles.subtitle}>
-        Check the weather in your favorite places.
+        Your saved weather locations
       </Text>
 
-      {loading && (
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#60A5FA" />
-          <Text style={styles.message}>
-            Loading city weather...
-          </Text>
-        </View>
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#FFFFFF"
+          style={styles.loader}
+        />
+      ) : (
+        <FlatList
+          data={cities}
+          keyExtractor={(item) => item.toLowerCase()}
+          renderItem={renderCity}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              No cities saved yet. Search for a city and tap
+              {" "}Add to My Cities.
+            </Text>
+          }
+          refreshing={loading}
+          onRefresh={loadCities}
+        />
       )}
-
-      {!!error && <Text style={styles.error}>{error}</Text>}
-
-      {!loading &&
-        cities.map((city) => {
-          const condition = city.weather?.[0]?.main ?? "Unknown";
-          const temperature = city.main?.temp;
-
-          return (
-            <Pressable
-              key={city.id}
-              style={({ pressed }) => [
-                styles.cityCard,
-                pressed && styles.cardPressed,
-              ]}
-              onPress={() => handleCityPress(city)}
-            >
-              <View style={styles.cityDetails}>
-                <Text style={styles.cityName}>{city.name}</Text>
-
-                <Text style={styles.country}>
-                  {city.sys?.country ?? ""}
-                </Text>
-
-                <Text style={styles.condition}>{condition}</Text>
-
-                <Text style={styles.tapHint}>
-                  Tap to view weather
-                </Text>
-              </View>
-
-              <View style={styles.weatherInfo}>
-                <Text style={styles.icon}>
-                  {getWeatherIcon(condition)}
-                </Text>
-
-                <Text style={styles.temperature}>
-                  {typeof temperature === "number"
-                    ? `${Math.round(temperature)}°`
-                    : "--"}
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -172,88 +164,74 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0B1420",
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 35,
+    paddingTop: 20,
   },
   title: {
     color: "#FFFFFF",
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "bold",
-    marginTop: 25,
+    marginHorizontal: 20,
   },
   subtitle: {
-    color: "#9CA3AF",
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 8,
-    marginBottom: 25,
+    color: "#91A0B5",
+    marginTop: 6,
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
-  cityCard: {
-    backgroundColor: "#182536",
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 15,
+  list: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    flexGrow: 1,
+  },
+  card: {
+    backgroundColor: "#172536",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: "#26374A",
   },
-  cardPressed: {
-    opacity: 0.75,
-  },
-  cityDetails: {
+  cityInfo: {
     flex: 1,
-    paddingRight: 10,
+    marginRight: 10,
   },
   cityName: {
     color: "#FFFFFF",
-    fontSize: 21,
-    fontWeight: "bold",
-  },
-  country: {
-    color: "#9CA3AF",
-    fontSize: 13,
-    marginTop: 3,
+    fontSize: 19,
+    fontWeight: "600",
   },
   condition: {
-    color: "#D1D5DB",
-    fontSize: 15,
-    marginTop: 10,
+    color: "#91A0B5",
+    marginTop: 5,
+    textTransform: "capitalize",
   },
-  tapHint: {
-    color: "#60A5FA",
-    fontSize: 12,
-    marginTop: 8,
-  },
-  weatherInfo: {
-    alignItems: "center",
-    minWidth: 75,
-  },
-  icon: {
-    fontSize: 34,
+  rightSide: {
+    alignItems: "flex-end",
+    gap: 8,
   },
   temperature: {
     color: "#FFFFFF",
-    fontSize: 27,
+    fontSize: 24,
+  },
+  removeButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    borderRadius: 8,
+    backgroundColor: "#38232B",
+  },
+  removeText: {
+    color: "#FF8B8B",
+    fontSize: 12,
     fontWeight: "600",
-    marginTop: 5,
   },
-  loading: {
-    alignItems: "center",
-    marginTop: 25,
-    gap: 10,
+  loader: {
+    marginTop: 50,
   },
-  message: {
-    color: "#9CA3AF",
-    fontSize: 14,
-  },
-  error: {
-    color: "#F87171",
-    fontSize: 14,
-    marginBottom: 15,
-    lineHeight: 21,
+  emptyText: {
+    color: "#91A0B5",
+    textAlign: "center",
+    marginTop: 40,
+    lineHeight: 22,
   },
 });

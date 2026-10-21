@@ -1,172 +1,198 @@
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+
 import {
-  StyleSheet,
   View,
   Text,
-  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
   ActivityIndicator,
+  Alert,
+  Keyboard,
+  ScrollView,
 } from "react-native";
 
-import SearchBar from "../components/SearchBar";
-import Hero from "../components/Hero";
-import AirConditions from "../components/AirConditions";
-import Forecast from "../components/Forecast";
-import {
-  getCurrentWeather,
-  getForecast,
-} from "../services/WeatherApi";
+import { getCurrentWeather } from "../Services/WeatherApi";
+import { getCities, addCity } from "../services/CityStorage";
 
-export default function WeatherScreen({ route }) {
-  const [city, setCity] = useState("Mingora");
-  const [searchCity, setSearchCity] = useState("Mingora");
+export default function WeatherScreen({ navigation, route }) {
+  const [city, setCity] = useState("Swat");
   const [weather, setWeather] = useState(null);
-  const [forecast, setForecast] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
-  function handleSearch() {
-    const trimmedCity = city.trim();
-
-    if (trimmedCity) {
-      setSearchCity(trimmedCity);
+  const fetchWeather = async (cityName) => {
+    if (!cityName?.trim()) {
+      Alert.alert("Enter a city", "Please enter a city name.");
+      return;
     }
-  }
 
-  // Update the weather screen when a city is selected
-  // from the Cities tab.
-  useEffect(() => {
-    const selectedCity = route.params?.selectedCity;
+    Keyboard.dismiss();
+    setLoading(true);
 
-    if (selectedCity) {
-      setCity(selectedCity);
-      setSearchCity(selectedCity);
-    }
-  }, [route.params?.selectedCity]);
+    try {
+      const data = await getCurrentWeather(cityName.trim());
 
-  // Fetch current weather and the 5-day forecast.
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchWeather() {
-      setLoading(true);
-      setError("");
-      setForecast([]);
-
-      try {
-        const currentData = await getCurrentWeather(searchCity);
-
-        if (cancelled) return;
-
-        setWeather(currentData);
-
-        const forecastData = await getForecast(searchCity);
-
-        if (cancelled) return;
-
-        const forecastList = forecastData.list ?? [];
-
-        // Get the first five forecast dates.
-        const dates = [
-          ...new Set(
-            forecastList.map((item) =>
-              item.dt_txt.split(" ")[0]
-            )
-          ),
-        ].slice(0, 5);
-
-        // Select the forecast closest to midday for each date.
-        const dailyForecast = dates.map((date) => {
-          const entries = forecastList.filter((item) =>
-            item.dt_txt.startsWith(date)
-          );
-
-          const middayForecast = entries.reduce(
-            (closest, item) => {
-              const hour = Number(item.dt_txt.slice(11, 13));
-              const closestHour = Number(
-                closest.dt_txt.slice(11, 13)
-              );
-
-              return Math.abs(hour - 12) <
-                Math.abs(closestHour - 12)
-                ? item
-                : closest;
-            },
-            entries[0]
-          );
-
-          return {
-            date,
-            temperature: middayForecast.main.temp,
-            condition:
-              middayForecast.weather?.[0]?.main ?? "Unknown",
-          };
-        });
-
-        setForecast(dailyForecast);
-      } catch (err) {
-        console.error("Failed to fetch weather:", err);
-
-        if (!cancelled) {
-          setError(
-            "Unable to load weather. Check the city, API key, and internet connection."
-          );
-          setWeather(null);
-          setForecast([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      if (!data?.name) {
+        throw new Error("City not found");
       }
+
+      setWeather(data);
+      setCity(data.name);
+
+      const savedCities = await getCities();
+
+      setIsSaved(
+        savedCities.some(
+          (item) =>
+            item.toLowerCase() === data.name.toLowerCase()
+        )
+      );
+    } catch (error) {
+      setWeather(null);
+      setIsSaved(false);
+
+      Alert.alert(
+        "Weather unavailable",
+        "Could not find that city. Check the name and try again."
+      );
+    } finally {
+      setLoading(false);
     }
+  };
 
-    fetchWeather();
+  useEffect(() => {
+    const selectedCity = route?.params?.selectedCity;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [searchCity]);
+    fetchWeather(selectedCity || "Swat");
+  }, [route?.params?.requestId, route?.params?.selectedCity]);
+
+  const handleAddCity = async () => {
+    if (!weather?.name || saving) return;
+
+    setSaving(true);
+
+    try {
+      const savedCities = await getCities();
+
+      const alreadySaved = savedCities.some(
+        (item) =>
+          item.toLowerCase() === weather.name.toLowerCase()
+      );
+
+      if (alreadySaved) {
+        setIsSaved(true);
+
+        Alert.alert(
+          "Already Added",
+          `${weather.name} is already in My Cities.`
+        );
+
+        return;
+      }
+
+      await addCity(weather.name);
+      setIsSaved(true);
+
+      Alert.alert(
+        "City Added",
+        `${weather.name} has been added to My Cities.`
+      );
+    } catch (error) {
+      Alert.alert("Error", "Could not save this city.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.title}>CloudNine</Text>
-      <Text style={styles.subtitle}>Your weather, at a glance</Text>
+      <Text style={styles.subtitle}>Weather at a glance</Text>
 
-      <SearchBar
-        city={city}
-        setCity={setCity}
-        onSearch={handleSearch}
-      />
+      <View style={styles.searchRow}>
+        <TextInput
+          style={styles.input}
+          placeholder="Search city..."
+          placeholderTextColor="#91A0B5"
+          value={city}
+          onChangeText={setCity}
+          onSubmitEditing={() => fetchWeather(city)}
+          returnKeyType="search"
+        />
 
-      {loading && (
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#60A5FA" />
-          <Text style={styles.message}>
-            Loading weather for {searchCity}...
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={() => fetchWeather(city)}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>Search</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#FFFFFF"
+          style={styles.loader}
+        />
+      ) : weather ? (
+        <View style={styles.weatherCard}>
+          <Text style={styles.cityName}>{weather.name}</Text>
+
+          <Text style={styles.temperature}>
+            {Math.round(weather.main.temp)}°
           </Text>
+
+          <Text style={styles.condition}>
+            {weather.weather?.[0]?.description}
+          </Text>
+
+          <View style={styles.detailsRow}>
+            <Text style={styles.detail}>
+              Feels like {Math.round(weather.main.feels_like)}°
+            </Text>
+
+            <Text style={styles.detail}>
+              Humidity {weather.main.humidity}%
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.addButton,
+              isSaved && styles.savedButton,
+            ]}
+            onPress={handleAddCity}
+            disabled={saving || isSaved}
+          >
+            <Text style={styles.buttonText}>
+              {saving
+                ? "Saving..."
+                : isSaved
+                ? "✓ Added to My Cities"
+                : "＋ Add to My Cities"}
+            </Text>
+          </TouchableOpacity>
         </View>
+      ) : (
+        <Text style={styles.emptyText}>
+          Search for a city to see its weather.
+        </Text>
       )}
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
-
-      {!loading && weather && (
-        <>
-          <Text style={styles.city}>{weather.name}</Text>
-
-          <Hero weather={weather} />
-
-          <AirConditions weather={weather} />
-
-          <Forecast forecast={forecast} />
-        </>
-      )}
+      <TouchableOpacity
+        style={styles.citiesButton}
+        onPress={() => navigation.navigate("Cities")}
+      >
+        <Text style={styles.buttonText}>View My Cities</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -178,41 +204,96 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingBottom: 35,
+    flexGrow: 1,
   },
   title: {
     color: "#FFFFFF",
     fontSize: 30,
     fontWeight: "bold",
-    marginTop: 25,
   },
   subtitle: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: "#91A0B5",
     marginTop: 5,
-    marginBottom: 20,
+    marginBottom: 25,
   },
-  city: {
-    color: "#FFFFFF",
-    fontSize: 30,
-    fontWeight: "600",
-    marginTop: 25,
-    marginBottom: 5,
-  },
-  loading: {
-    alignItems: "center",
-    marginTop: 30,
+  searchRow: {
+    flexDirection: "row",
     gap: 10,
   },
-  message: {
-    color: "#9CA3AF",
-    fontSize: 14,
-    textAlign: "center",
+  input: {
+    flex: 1,
+    backgroundColor: "#172536",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    color: "#FFFFFF",
+    minHeight: 50,
   },
-  error: {
-    color: "#F87171",
-    fontSize: 14,
+  searchButton: {
+    backgroundColor: "#3533CD",
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  loader: {
+    marginTop: 50,
+  },
+  weatherCard: {
+    backgroundColor: "#172536",
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+    marginTop: 25,
+  },
+  cityName: {
+    color: "#FFFFFF",
+    fontSize: 25,
+    fontWeight: "bold",
+  },
+  temperature: {
+    color: "#FFFFFF",
+    fontSize: 66,
+    fontWeight: "300",
+    marginTop: 10,
+  },
+  condition: {
+    color: "#91A0B5",
+    fontSize: 17,
+    textTransform: "capitalize",
+  },
+  detailsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+    marginVertical: 25,
+  },
+  detail: {
+    color: "#FFFFFF",
+    fontSize: 13,
+  },
+  addButton: {
+    backgroundColor: "#3533CD",
+    padding: 15,
+    borderRadius: 12,
+    width: "100%",
+    alignItems: "center",
+  },
+  savedButton: {
+    backgroundColor: "#245B49",
+  },
+  citiesButton: {
+    backgroundColor: "#172536",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
     marginTop: 20,
-    lineHeight: 21,
+  },
+  emptyText: {
+    color: "#91A0B5",
+    marginTop: 30,
+    textAlign: "center",
   },
 });
