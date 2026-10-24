@@ -13,7 +13,7 @@ import {
 
 import { useFocusEffect } from "@react-navigation/native";
 
-import { getCurrentWeather } from "../Services/WeatherApi";
+import { getCurrentWeather } from "../services/WeatherApi";
 
 import {
   getCities,

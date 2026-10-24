@@ -13,7 +13,7 @@ import {
   ScrollView,
 } from "react-native";
 
-import { getCurrentWeather } from "../Services/WeatherApi";
+import { getCurrentWeather } from "../services/WeatherApi";
 import { getCities, addCity } from "../services/CityStorage";
 
 export default function WeatherScreen({ navigation, route }) {
