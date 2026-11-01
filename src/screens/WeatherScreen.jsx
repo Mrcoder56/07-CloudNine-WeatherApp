@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
   citiesButton: {
     backgroundColor: "#172536",
-    padding: 16,
+    padding: 16.0,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 20,
