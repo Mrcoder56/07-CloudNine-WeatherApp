@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   description: {
     color: "#9CA3AF",
     fontSize: 18,
-    marginTop: 5,
+    marginTop: 5.1,
     textTransform: "capitalize",
   },
 });

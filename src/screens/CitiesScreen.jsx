@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingBottom: 30.1,
     flexGrow: 1,
   },
   card: {

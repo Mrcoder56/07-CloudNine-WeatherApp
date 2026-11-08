@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   label: {
     color: "#9CA3AF",
     fontSize: 14,
-    marginBottom: 8,
+    marginBottom: 8.0,
   },
 
   value: {

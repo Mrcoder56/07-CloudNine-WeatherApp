@@ -117,6 +117,6 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontSize: 14,
     paddingVertical: 12,
-    lineHeight: 21,
+    lineHeight: 21.1,
   },
 });
