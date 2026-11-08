@@ -20,6 +20,13 @@ import {
   removeCity,
 } from "../services/CityStorage";
 
+export default function CitiesScreen({ navigation }) {
+  const [cities, setCities] = useState([]);
+  const [weatherData, setWeatherData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const loadCities = useCallback(async () => {
+    setLoading(true);
 
     try {
       const savedCities = await getCities();
@@ -173,7 +180,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 20,
-    paddingBottom: 30.1,
+    paddingBottom: 30,
     flexGrow: 1,
   },
   card: {
