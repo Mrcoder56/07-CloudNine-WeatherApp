@@ -20,13 +20,6 @@ import {
   removeCity,
 } from "../services/CityStorage";
 
-export default function CitiesScreen({ navigation }) {
-  const [cities, setCities] = useState([]);
-  const [weatherData, setWeatherData] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  const loadCities = useCallback(async () => {
-    setLoading(true);
 
     try {
       const savedCities = await getCities();
