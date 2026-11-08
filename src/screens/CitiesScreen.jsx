@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 
- { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { getCurrentWeather } from "../services/WeatherApi";
 
