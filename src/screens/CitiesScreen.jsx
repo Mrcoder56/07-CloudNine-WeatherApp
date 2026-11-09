@@ -25,7 +25,8 @@ export default function CitiesScreen({ navigation }) {
   const [weatherData, setWeatherData] = useState({});
   const [loading, setLoading] = useState(true);
 
-
+  const loadCities = useCallback(async () => {
+    setLoading(true);
 
     try {
       const savedCities = await getCities();
