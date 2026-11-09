@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = "@cloudnine/cities";
 
-const DEFAULT_CITIES = ["Swat", "Islamabad"];
+
 
 export async function getCities() {
   try {
