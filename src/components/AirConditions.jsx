@@ -39,7 +39,12 @@ export default function AirConditions({ weather }) {
   );
 }
 
-
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#182536",
+    borderRadius: 20,
+    padding: 20.1,
+    marginTop: 30,
   },
 
   heading: {
