@@ -40,7 +40,7 @@ export default function TabNavigator() {
               color={color}
             />
           );
-        },
+        }
       })}
     >
       <Tab.Screen
