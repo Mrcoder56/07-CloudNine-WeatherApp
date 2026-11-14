@@ -38,7 +38,7 @@ export default function TabNavigator() {
               name={iconName}
               size={size}
               color={color}
-            /
+            />
           );
         },
       })}
