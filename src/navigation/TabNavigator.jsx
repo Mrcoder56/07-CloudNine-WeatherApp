@@ -39,7 +39,7 @@ export default function TabNavigator() {
               size={size}
               color={color}
             />
-          );
+          )
         },
       })}
     >
