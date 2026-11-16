@@ -43,7 +43,7 @@ export default function TabNavigator() {
         },
       })}
     >
-      <Tab.Screen
+      <Tab.Scree
         name="Weather"
         component={WeatherScreen}
       />
