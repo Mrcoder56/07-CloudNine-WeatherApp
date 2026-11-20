@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import WeatherScreen from "../screens/WeatherScreen";
 import CitiesScreen from "../screens/CitiesScreen";
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator()
 
 export default function TabNavigator() {
   return (
